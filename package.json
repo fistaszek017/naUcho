@@ -1,0 +1,14 @@
+{
+  "name": "interwaly-muzyczne",
+  "version": "1.0.0",
+  "description": "Interaktywna aplikacja do nauki rozpoznawania interwałów muzycznych ze słuchem i nomenklaturą",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve -l 3000 .",
+    "dev": "npx serve -l 3000 ."
+  },
+  "keywords": ["music", "intervals", "ear-training", "solfege", "nauka-sluchu"],
+  "author": "",
+  "license": "MIT"
+}
