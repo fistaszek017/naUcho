@@ -1,6 +1,6 @@
-# Trener Interwałów Muzycznych
+# NaUcho - Trener Interwałów Muzycznych
 
-Trener Interwałów Muzycznych to kompleksowa, w pełni interaktywna aplikacja internetowa stworzona z myślą o muzykach, uczniach szkół muzycznych oraz hobbystach, którzy chcą doskonalić swój słuch relatywny. Aplikacja pozwala na naukę rozpoznawania interwałów ze słuchu oraz opanowanie ich prawidłowego nazewnictwa w obrębie jednej oktawy (od prymy czystej do oktawy czystej). Działa w całości w Twojej przeglądarce internetowej, nie wymaga instalacji, logowania ani pobierania dodatkowych plików.
+NaUcho to kompleksowa, w pełni interaktywna aplikacja internetowa stworzona z myślą o muzykach, uczniach szkół muzycznych oraz hobbystach, którzy chcą doskonalić swój słuch relatywny. Aplikacja pozwala na naukę rozpoznawania interwałów ze słuchu oraz opanowanie ich prawidłowego nazewnictwa w obrębie jednej oktawy (od prymy czystej do oktawy czystej). Działa w całości w Twojej przeglądarce internetowej, nie wymaga instalacji, logowania ani pobierania dodatkowych plików.
 
 ## Jak rozpocząć korzystanie?
 
