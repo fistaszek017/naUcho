@@ -530,6 +530,15 @@ html, body {
   color: var(--text-muted);
 }
 
+.ios-sound-hint {
+  width: 100%;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 0.35rem;
+  line-height: 1.35;
+}
+
 /* Animacja fali dźwiękowej */
 .sound-wave {
   display: flex;

@@ -151,6 +151,14 @@ class IntervalTrainerApp {
   }
 
   bindEvents() {
+    // Globalne natychmiastowe odblokowanie audio na iOS Safari / WebKit przy pierwszym dotknięciu ekranu
+    const unlockAudioOnGesture = () => {
+      audio.unlockSafari();
+    };
+    ["pointerdown", "touchstart", "touchend", "click"].forEach(evtName => {
+      window.addEventListener(evtName, unlockAudioOnGesture, { passive: true });
+    });
+
     // Przełączanie zakładek trybów
     this.dom.modeTabs.forEach(tab => {
       tab.addEventListener("click", () => {
@@ -192,11 +200,15 @@ class IntervalTrainerApp {
     });
 
     // Przyciski odtwarzania
+    this.dom.quizPlayBtn.addEventListener("pointerdown", () => audio.unlockSafari());
     this.dom.quizPlayBtn.addEventListener("click", () => {
+      audio.unlockSafari();
       this.playCurrentQuestion();
     });
 
+    this.dom.quizReplayBtn.addEventListener("pointerdown", () => audio.unlockSafari());
     this.dom.quizReplayBtn.addEventListener("click", () => {
+      audio.unlockSafari();
       this.playCurrentQuestion();
     });
 
