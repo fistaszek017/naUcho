@@ -205,21 +205,29 @@ export function normalizeAnswer(text) {
 export function isAnswerMatching(userInput, interval) {
   const cleanInput = normalizeAnswer(userInput);
   if (!cleanInput) return false;
+  const noSpaceInput = cleanInput.replace(/\s+/g, "");
 
-  // Bezpośrednie dopasowanie do skrótu (np. "3w", "2m", "4", "5", "tr")
-  if (cleanInput === normalizeAnswer(interval.short)) return true;
+  // Bezpośrednie dopasowanie do skrótu (np. "3w", "3 w", "2m", "4", "5", "tr")
+  if (cleanInput === normalizeAnswer(interval.short) ||
+      noSpaceInput === normalizeAnswer(interval.short).replace(/\s+/g, "")) {
+    return true;
+  }
 
   // Sprawdzenie liczby półtonów z jednostką (np. "4p", "4 poltony", "4 poltonow")
   // Uwaga: sama cyfra np. "4" jest zarezerwowana dla Kwarty czystej!
   if (cleanInput === `${interval.semitones}p` || 
+      noSpaceInput === `${interval.semitones}p` ||
       cleanInput === `${interval.semitones} polton` ||
       cleanInput === `${interval.semitones} poltony` ||
       cleanInput === `${interval.semitones} poltonow`) {
     return true;
   }
 
-  // Sprawdzenie listy aliasów
-  return interval.aliases.some(alias => normalizeAnswer(alias) === cleanInput);
+  // Sprawdzenie listy aliasów (ze spacjami lub bez)
+  return interval.aliases.some(alias => {
+    const normAlias = normalizeAnswer(alias);
+    return normAlias === cleanInput || normAlias.replace(/\s+/g, "") === noSpaceInput;
+  });
 }
 
 /**

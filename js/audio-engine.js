@@ -1,8 +1,12 @@
 /**
  * audio-engine.js
- * Silnik syntezy dźwięku oparty na Web Audio API.
- * Zapewnia naturalne brzmienie instrumentów (Pianino, Wibrafon, Ciepły Synth),
- * polifonię oraz precyzyjne odtwarzanie sekwencji interwałowych.
+ * Silnik syntezy dźwięku oparty na Web Audio API z pełnym wsparciem
+ * dla urządzeń mobilnych (iOS Safari, WebKit, Android Chrome).
+ *
+ * Zapewnia:
+ * 1. Niezawodne odblokowywanie dźwięku na iOS Safari (synchronous gesture unlock + silent buffer + HTML5 audio).
+ * 2. Bezpieczne obwiednie głośności (unika błędów exponentialRampToValueAtTime w WebKit).
+ * 3. Naturalne barwy (Fortepian, Wibrafon, Ciepły Synth).
  */
 
 class AudioEngine {
@@ -12,9 +16,11 @@ class AudioEngine {
     this.compressor = null;
     this.currentInstrument = "piano"; // 'piano' | 'vibes' | 'synth'
     this.volume = 0.8;
-    this.tempoSpeed = 1.0; // 0.8 = wolniej, 1.0 = normalnie, 1.25 = szybciej
+    this.tempoSpeed = 1.0;
     this.activeTimeouts = [];
     this.activeVoices = [];
+    this.unlocked = false;
+    this.silentAudio = null;
 
     // Callbacks dla UI
     this.onNoteStart = null;
@@ -23,14 +29,55 @@ class AudioEngine {
   }
 
   /**
-   * Inicjalizuje AudioContext po pierwszej interakcji użytkownika
+   * Kluczowa metoda odblokowująca audio w Mobile Safari (WebKit).
+   * Musi być wywołana synchronicznie w zdarzeniu użytkownika (touchstart, pointerdown, click).
    */
-  async init() {
-    if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioCtx();
+  unlockSafari() {
+    try {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+          this.setupAudioGraph();
+        }
+      }
 
-      // Dynamiczny kompresor zapobiegający przesterowaniom
+      if (this.ctx && this.ctx.state === "suspended") {
+        this.ctx.resume();
+      }
+
+      // Odtworzenie mikroskopijnego 1-próbkowego bufora ciszy – standard dla iOS Safari
+      if (this.ctx && !this.unlocked) {
+        const buffer = this.ctx.createBuffer(1, 1, 22050);
+        const source = this.ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(this.ctx.destination);
+        source.start(0);
+
+        // Odtworzenie cichego dźwięku HTML5 Audio do aktywacji sesji audio iOS
+        try {
+          if (!this.silentAudio) {
+            this.silentAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
+            this.silentAudio.setAttribute("playsinline", "");
+            this.silentAudio.setAttribute("webkit-playsinline", "");
+          }
+          this.silentAudio.play().catch(() => {});
+        } catch (e) {}
+
+        this.unlocked = true;
+      }
+    } catch (e) {
+      console.warn("Audio unlock notice:", e);
+    }
+  }
+
+  /**
+   * Konfiguruje graf audio (kompresor + master gain)
+   */
+  setupAudioGraph() {
+    if (!this.ctx || this.masterGain) return;
+
+    try {
       this.compressor = this.ctx.createDynamicsCompressor();
       this.compressor.threshold.setValueAtTime(-18, this.ctx.currentTime);
       this.compressor.knee.setValueAtTime(12, this.ctx.currentTime);
@@ -43,10 +90,17 @@ class AudioEngine {
 
       this.compressor.connect(this.masterGain);
       this.masterGain.connect(this.ctx.destination);
+    } catch (e) {
+      console.warn("Błąd konfiguracji grafu audio:", e);
     }
+  }
 
-    if (this.ctx.state === "suspended") {
-      await this.ctx.resume();
+  async init() {
+    this.unlockSafari();
+    if (this.ctx && this.ctx.state === "suspended") {
+      try {
+        await this.ctx.resume();
+      } catch (e) {}
     }
   }
 
@@ -70,9 +124,6 @@ class AudioEngine {
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
-  /**
-   * Zatrzymuje wszelkie zaplanowane nuty i czyści aktywne dźwięki
-   */
   stopAll() {
     this.activeTimeouts.forEach(t => clearTimeout(t));
     this.activeTimeouts = [];
@@ -88,9 +139,7 @@ class AudioEngine {
             if (n.stop) n.stop(this.ctx.currentTime + 0.05);
           });
         }
-      } catch (e) {
-        // Ignoruj błędy przy zatrzymywaniu
-      }
+      } catch (e) {}
     });
     this.activeVoices = [];
 
@@ -100,29 +149,32 @@ class AudioEngine {
   }
 
   /**
-   * Odtwarza pojedynczą nutę o zadanym numerze MIDI i długości trwania
+   * Odtwarza pojedynczą nutę.
+   * Używa setTargetAtTime i linearRamp zamiast exponentialRamp dla 100% zgodności z Safari.
    */
   async playNote(midiNumber, duration = 1.0, startTimeOffset = 0, isSimultaneous = false) {
     await this.init();
-    const now = this.ctx.currentTime + startTimeOffset;
+    if (!this.ctx) return;
+
+    const now = Math.max(this.ctx.currentTime, this.ctx.currentTime + startTimeOffset);
     const freq = this.midiToFreq(midiNumber);
 
     const voiceGain = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
 
     const createdNodes = [];
-    let noteGainVal = isSimultaneous ? 0.35 : 0.5;
+    const noteGainVal = isSimultaneous ? 0.35 : 0.5;
 
     if (this.currentInstrument === "piano") {
-      // Naturalny model pianina: fala podstawowa + składowe harmoniczne z szybkim atakiem
+      // Naturalny model pianina: fala podstawowa + harmoniczne z ciepłym filtrem
       filter.type = "lowpass";
-      filter.frequency.setValueAtTime(Math.min(freq * 6, 8000), now);
-      filter.frequency.exponentialRampToValueAtTime(Math.min(freq * 2, 3500), now + duration);
+      filter.frequency.setValueAtTime(Math.min(freq * 5.5, 7500), now);
+      filter.frequency.setTargetAtTime(Math.min(freq * 1.8, 2500), now + 0.05, duration * 0.3);
 
       const harmonics = [
         { mult: 1.0, gain: 0.75, detune: 0 },
-        { mult: 1.0, gain: 0.35, detune: 2 }, // lekki chorusing strun
-        { mult: 2.0, gain: 0.35, detune: -1 },
+        { mult: 1.0, gain: 0.35, detune: 2 },
+        { mult: 2.0, gain: 0.32, detune: -1 },
         { mult: 3.0, gain: 0.15, detune: 0 },
         { mult: 4.0, gain: 0.08, detune: 1 }
       ];
@@ -139,31 +191,30 @@ class AudioEngine {
         osc.connect(hGain);
         hGain.connect(filter);
         osc.start(now);
-        osc.stop(now + duration + 0.2);
+        osc.stop(now + duration + 0.25);
         createdNodes.push(osc, hGain);
       });
 
-      // Perkusyjny impuls uderzenia młoteczka w strunę
+      // Dźwięk młoteczka pianina
       const clickOsc = this.ctx.createOscillator();
       const clickGain = this.ctx.createGain();
       clickOsc.type = "triangle";
       clickOsc.frequency.setValueAtTime(freq * 1.5, now);
-      clickGain.gain.setValueAtTime(0.12, now);
-      clickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+      clickGain.gain.setValueAtTime(0.1, now);
+      clickGain.gain.setTargetAtTime(0.0001, now + 0.01, 0.015);
       clickOsc.connect(clickGain);
       clickGain.connect(filter);
       clickOsc.start(now);
-      clickOsc.stop(now + 0.05);
+      clickOsc.stop(now + 0.08);
       createdNodes.push(clickOsc, clickGain);
 
-      // Obwiednia głośności (ADSR dla pianina)
+      // Obwiednia głośności – bezpieczna dla Safari (linearRamp + setTargetAtTime)
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.exponentialRampToValueAtTime(noteGainVal, now + 0.008);
-      voiceGain.gain.exponentialRampToValueAtTime(noteGainVal * 0.7, now + 0.15);
-      voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      voiceGain.gain.linearRampToValueAtTime(noteGainVal, now + 0.012);
+      voiceGain.gain.setValueAtTime(noteGainVal * 0.75, now + 0.1);
+      voiceGain.gain.setTargetAtTime(0.0001, now + 0.1, duration * 0.35);
 
     } else if (this.currentInstrument === "vibes") {
-      // Wibrafon / dzwonki: czysty dźwięk z wyrazistą oktawą i dzwonkowym wybrzmieniem
       const osc1 = this.ctx.createOscillator();
       const osc2 = this.ctx.createOscillator();
       osc1.type = "sine";
@@ -173,7 +224,7 @@ class AudioEngine {
 
       const h2Gain = this.ctx.createGain();
       h2Gain.gain.setValueAtTime(0.3, now);
-      h2Gain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.5);
+      h2Gain.gain.setTargetAtTime(0.0001, now + 0.05, duration * 0.25);
 
       osc1.connect(filter);
       osc2.connect(h2Gain);
@@ -181,19 +232,19 @@ class AudioEngine {
 
       osc1.start(now);
       osc2.start(now);
-      osc1.stop(now + duration + 0.2);
-      osc2.stop(now + duration + 0.2);
+      osc1.stop(now + duration + 0.25);
+      osc2.stop(now + duration + 0.25);
       createdNodes.push(osc1, osc2, h2Gain);
 
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(5000, now);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.exponentialRampToValueAtTime(noteGainVal * 0.9, now + 0.005);
-      voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration * 1.2);
+      voiceGain.gain.linearRampToValueAtTime(noteGainVal * 0.9, now + 0.008);
+      voiceGain.gain.setTargetAtTime(0.0001, now + 0.08, duration * 0.45);
 
     } else {
-      // Warm Synth: ciepła fala piłokształtna i trójkątna z miękkim filtrem
+      // Warm Synth
       const osc1 = this.ctx.createOscillator();
       const osc2 = this.ctx.createOscillator();
       osc1.type = "sawtooth";
@@ -210,23 +261,22 @@ class AudioEngine {
       osc2.connect(filter);
       osc1.start(now);
       osc2.start(now);
-      osc1.stop(now + duration + 0.2);
-      osc2.stop(now + duration + 0.2);
+      osc1.stop(now + duration + 0.25);
+      osc2.stop(now + duration + 0.25);
       createdNodes.push(osc1, osc2);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.exponentialRampToValueAtTime(noteGainVal * 0.6, now + 0.04);
-      voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      voiceGain.gain.linearRampToValueAtTime(noteGainVal * 0.65, now + 0.03);
+      voiceGain.gain.setTargetAtTime(0.0001, now + 0.06, duration * 0.35);
     }
 
     filter.connect(voiceGain);
-    voiceGain.connect(this.compressor);
+    voiceGain.connect(this.compressor || this.ctx.destination);
     createdNodes.push(voiceGain, filter);
 
     const voiceRecord = { gainNode: voiceGain, nodes: createdNodes };
     this.activeVoices.push(voiceRecord);
 
-    // Wywołanie callbacków UI
     const delayMs = startTimeOffset * 1000;
     if (this.onNoteStart) {
       const tStart = setTimeout(() => {
@@ -243,15 +293,10 @@ class AudioEngine {
     }
   }
 
-  /**
-   * Odtwarza pełny interwał zgodnie ze wskazanym kierunkiem:
-   * 'up', 'down', 'up_down', 'together', 'up_together', 'down_together', 'random'
-   */
   async playInterval(rootMidi, semitones, direction = "up") {
     this.stopAll();
     await this.init();
 
-    // Obsługa losowego stylu
     let actualDirection = direction;
     if (actualDirection === "random") {
       const styles = ["up", "down", "up_down", "together", "up_together", "down_together"];
@@ -261,7 +306,6 @@ class AudioEngine {
     const noteDur = (0.75 / this.tempoSpeed);
     const pause = (0.15 / this.tempoSpeed);
     const longDur = (1.5 / this.tempoSpeed);
-
     let totalDuration = 0;
 
     switch (actualDirection) {
@@ -269,7 +313,7 @@ class AudioEngine {
         const targetMidi = rootMidi + semitones;
         this.playNote(rootMidi, noteDur, 0);
         this.playNote(targetMidi, noteDur * 1.2, noteDur + pause);
-        totalDuration = (noteDur * 2.2 + pause);
+        totalDuration = noteDur * 2.2 + pause;
         break;
       }
 
@@ -277,7 +321,7 @@ class AudioEngine {
         const targetMidi = rootMidi - semitones;
         this.playNote(rootMidi, noteDur, 0);
         this.playNote(targetMidi, noteDur * 1.2, noteDur + pause);
-        totalDuration = (noteDur * 2.2 + pause);
+        totalDuration = noteDur * 2.2 + pause;
         break;
       }
 
@@ -286,7 +330,7 @@ class AudioEngine {
         this.playNote(rootMidi, noteDur, 0);
         this.playNote(targetMidi, noteDur, noteDur + pause);
         this.playNote(rootMidi, noteDur * 1.2, (noteDur + pause) * 2);
-        totalDuration = ((noteDur + pause) * 2 + noteDur * 1.2);
+        totalDuration = (noteDur + pause) * 2 + noteDur * 1.2;
         break;
       }
 
@@ -300,10 +344,8 @@ class AudioEngine {
 
       case "up_together": {
         const targetMidi = rootMidi + semitones;
-        // Krok 1: w górę
         this.playNote(rootMidi, noteDur, 0);
         this.playNote(targetMidi, noteDur, noteDur + pause);
-        // Krok 2: naraz po chwili oddechu
         const togetherStart = (noteDur + pause) * 2;
         this.playNote(rootMidi, longDur, togetherStart, true);
         this.playNote(targetMidi, longDur, togetherStart, true);
@@ -313,10 +355,8 @@ class AudioEngine {
 
       case "down_together": {
         const targetMidi = rootMidi - semitones;
-        // Krok 1: w dół
         this.playNote(rootMidi, noteDur, 0);
         this.playNote(targetMidi, noteDur, noteDur + pause);
-        // Krok 2: naraz po chwili oddechu
         const togetherStart = (noteDur + pause) * 2;
         this.playNote(rootMidi, longDur, togetherStart, true);
         this.playNote(targetMidi, longDur, togetherStart, true);
@@ -345,11 +385,9 @@ class AudioEngine {
     };
   }
 
-  /**
-   * Krótki przyjemny dźwięk sukcesu
-   */
   async playSuccessSound() {
     await this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const osc1 = this.ctx.createOscillator();
     const osc2 = this.ctx.createOscillator();
@@ -357,20 +395,20 @@ class AudioEngine {
 
     osc1.type = "sine";
     osc2.type = "triangle";
-    osc1.frequency.setValueAtTime(523.25, now); // C5
-    osc1.frequency.setValueAtTime(659.25, now + 0.08); // E5
-    osc1.frequency.setValueAtTime(783.99, now + 0.16); // G5
-    osc1.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+    osc1.frequency.setValueAtTime(523.25, now);
+    osc1.frequency.setValueAtTime(659.25, now + 0.08);
+    osc1.frequency.setValueAtTime(783.99, now + 0.16);
+    osc1.frequency.setValueAtTime(1046.50, now + 0.24);
 
     osc2.frequency.setValueAtTime(1046.50, now + 0.24);
 
-    gain.gain.setValueAtTime(0.001, now);
-    gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.04);
+    gain.gain.setTargetAtTime(0.0001, now + 0.26, 0.09);
 
     osc1.connect(gain);
     osc2.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.masterGain || this.ctx.destination);
 
     osc1.start(now);
     osc2.start(now + 0.24);
@@ -378,25 +416,23 @@ class AudioEngine {
     osc2.stop(now + 0.55);
   }
 
-  /**
-   * Krótki, łagodny dźwięk błędu
-   */
   async playErrorSound() {
     await this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = "triangle";
-    osc.frequency.setValueAtTime(220, now); // A3
-    osc.frequency.linearRampToValueAtTime(174.61, now + 0.2); // F3
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.linearRampToValueAtTime(174.61, now + 0.18);
 
-    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.setValueAtTime(0.0001, now);
     gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+    gain.gain.setTargetAtTime(0.0001, now + 0.1, 0.08);
 
     osc.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.masterGain || this.ctx.destination);
 
     osc.start(now);
     osc.stop(now + 0.35);

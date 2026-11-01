@@ -1,96 +1,51 @@
-# 🎵 Trener Interwałów Muzycznych
+# NaUcho - Trener Interwałów Muzycznych
 
-Kompleksowa, interaktywna aplikacja internetowa do nauki rozpoznawania interwałów muzycznych ze słuchu oraz opanowywania ich nomenklatury (od **Prymy czystej** do **Oktawy czystej**).
+NaUcho to kompleksowa, w pełni interaktywna aplikacja internetowa stworzona z myślą o muzykach, uczniach szkół muzycznych oraz hobbystach, którzy chcą doskonalić swój słuch relatywny. Aplikacja pozwala na naukę rozpoznawania interwałów ze słuchu oraz opanowanie ich prawidłowego nazewnictwa w obrębie jednej oktawy (od prymy czystej do oktawy czystej). Działa w całości w Twojej przeglądarce internetowej, nie wymaga instalacji, logowania ani pobierania dodatkowych plików.
 
-Aplikacja działa w 100% w przeglądarce, wykorzystując **Web Audio API** do precyzyjnej syntezy wielogłosowej oraz **LocalStorage** do zapamiętywania preferencji i postępów użytkownika.
+## Jak rozpocząć korzystanie?
 
----
+Wystarczy otworzyć aplikację w dowolnej nowoczesnej przeglądarce internetowej (takiej jak Google Chrome, Mozilla Firefox, Apple Safari czy Microsoft Edge).
 
-## 🚀 Jak uruchomić?
+Aplikacja jest gotowa do użycia natychmiast po uruchomieniu. Twój postęp, statystyki poprawnych odpowiedzi oraz wszystkie indywidualne preferencje są na bieżąco i automatycznie zapisywane w lokalnej pamięci Twojej przeglądarki. Dzięki temu, po zamknięciu i ponownym otwarciu strony, system przywróci Twoje ustawienia i będziesz mógł kontynuować trening w tym samym miejscu.
 
-Aplikacja nie wymaga żadnej instalacji ani kompilacji:
+## Dostępne tryby nauki
 
-1. **Najprostszy sposób:** Kliknij dwukrotnie plik `index.html` w eksploratorze plików (działa natychmiast w każdej przeglądarce: Chrome, Edge, Firefox, Safari).
-2. **Za pomocą serwera lokalnego (opcjonalnie):**
-   ```bash
-   npm start
-   # lub
-   npx serve .
-   ```
-   i otwórz adres `http://localhost:3000`.
+Aplikacja została podzielona na trzy główne moduły, które odpowiadają różnym etapom przyswajania wiedzy. Pomiędzy trybami możesz przełączać się w dowolnym momencie za pomocą głównego panelu nawigacyjnego.
 
----
+### 1. Tryb: Nauka (Atlas Interwałów)
 
-## 🎹 Trzy Tryby Pracy
+Moduł wprowadzający, służący do zapoznania się z teorią, budową oraz brzmieniem poszczególnych interwałów.
 
-1. **Tryb 1: Nauka (Atlas i Odsłuch)**
-   - Przegląd wszystkich 13 interwałów z podziałem na półtony i stosunki częstotliwości.
-   - **Wirtualna klawiatura fortepianowa** dostępna wyłącznie w tym trybie do nauki i wizualizacji odległości klawiszy.
-   - Szybkie przyciski odsłuchu w 3 wariantach: `▲ W górę`, `▼ W dół`, `♫ Naraz (harmonicznie)`.
-   - Zestaw sprawdzonych skojarzeń mnemotechnicznych ze znanymi utworami.
-   - Wskaźniki poziomu opanowania dla każdego interwału.
+- **Wirtualna klawiatura fortepianowa:** Interaktywny instrument, który wizualizuje odległości między dźwiękami. Klawiatura dynamicznie podświetla odpowiednie klawisze podczas odtwarzania danego interwału, co pomaga powiązać dźwięk z obrazem na klawiaturze.
+- **Opcje odsłuchu:** Każdy interwał możesz odsłuchać na trzy sposoby: melodycznie w górę, melodycznie w dół oraz harmonicznie (dwa dźwięki odtwarzane jednocześnie).
+- **Baza mnemotechnik:** Aplikacja zawiera gotową listę skojarzeń opartych na popularnych utworach muzycznych (np. początkowe dźwięki z filmu "Szczęki" dla sekundy małej czy temat z "Gwiezdnych Wojen" dla kwinty czystej). To najszybsza metoda na zapamiętanie specyfiki brzmieniowej każdego interwału.
 
-2. **Tryb 2: Odgadywanie (Wybór z listy)**
-   - Komputer odtwarza losowy interwał.
-   - Czysty test słuchowy bez podpowiedzi wizualnych z klawiatury.
-   - Użytkownik wybiera pasujący interwał klikając w kafelek.
-   - Natychmiastowa informacja zwrotna (sukces / błąd) oraz szczegółowe wyjaśnienie zagranego interwału.
+### 2. Tryb: Odgadywanie (Wybór z listy)
 
-3. **Tryb 3: Odgadywanie (Wpisywanie z klawiatury)**
-   - Nauka profesjonalnej nomenklatury muzycznej poprzez pisanie z klawiatury.
-   - Czyste pole tekstowe z autofokusem (bez rozpraszających przycisków pomocniczych).
-   - Akceptuje:
-     - Skróty: `1`, `2m`, `2w`, `3m`, `3w`, `4`, `tr`, `4>`, `5<`, `5`, `6m`, `6w`, `7m`, `7w`, `8`
-     - Pełne nazwy (z polskimi znakami lub bez): `tercja wielka`, `sekunda mala`, `tryton`, `kwarta`, itp.
-     - Półtony: np. `4p`, `4 poltony`.
+Praktyczny test słuchowy oparty na systemie zamkniętym.
 
----
+- Komputer generuje losowy interwał z puli, którą wcześniej zdefiniujesz. Nie masz do dyspozycji podpowiedzi wizualnych.
+- Twoim zadaniem jest zidentyfikowanie usłyszanego interwału i kliknięcie odpowiedniego kafelka z jego nazwą na ekranie.
+- Po każdej odpowiedzi system udziela natychmiastowej informacji zwrotnej, wyświetlając podsumowanie zagranych nut i weryfikując poprawność Twojego wyboru.
 
-## 🛠️ Własna konfiguracja oznaczeń i piosenek
+### 3. Tryb: Odgadywanie (Wpisywanie)
 
-Na samej górze plików `js/intervals-data.js` oraz `js/bundle.js` znajduje się przejrzysta sekcja:
-```javascript
-export const INTERVALS_CONFIG = [
-  {
-    semitones: 1,
-    short: "2m", // Tutaj możesz zmienić oznaczenie (np. na "sm")
-    name: "Sekunda mała",
-    mnemonic: "Motyw z filmu 'Szczęki'...", // Tutaj możesz wpisać własną piosenkę
-    color: "#ec4899"
-  },
-  ...
-];
-```
-Wszelkie wprowadzone tam zmiany natychmiast przenoszą się na całą aplikację (przyciski, teksty, sprawdzanie pisowni w trybie 3).
+Zaawansowany moduł treningowy, który sprawdza nie tylko słuch, ale i płynność posługiwania się profesjonalną nomenklaturą muzyczną.
 
----
+- Zamiast wybierać odpowiedź z gotowej listy, musisz samodzielnie wpisać ją na klawiaturze w odpowiednim polu tekstowym.
+- Wbudowany parser jest wysoce elastyczny. Akceptuje pełne nazwy (np. "tercja wielka", "sekunda mala"), standardowe skróty muzyczne (np. "2m", "3w", "tr", "8"), a także zapis w półtonach (np. "4p").
+- System automatycznie ignoruje wielkość liter oraz ewentualny brak polskich znaków diakrytycznych, pozwalając na szybkie i bezbłędne wprowadzanie danych.
 
-## ✨ Kluczowe Funkcjonalności
+## Główne funkcje wspomagające trening
 
-- **Zmienny dźwięk początkowy (Root Pitch):** Interwały nie zaczynają się zawsze od tego samego dźwięku — losowane są z szerokiego, komfortowego rejestru fortepianowego (C3 – E5), z gwarancją braku bezpośrednich powtórzeń tej samej nuty bazowej.
-- **Active Learning (Inteligentne Powtórki):**
-  - Algorytm analizuje statystyki Twoich odpowiedzi (błędy, serie, procent skuteczności).
-  - Interwały, które sprawiają Ci trudność, pojawiają się na testach ze znacznie większym prawdopodobieństwem.
-  - Opanowane interwały są powtarzane rzadziej, w celu utrwalenia materiału.
-  - Opcję można w każdej chwili włączyć/wyłączyć jednym kliknięciem.
-- **Kierunki odtwarzania:**
-  - `Do góry` (melodycznie wznosząco)
-  - `W dół` (melodycznie opadająco)
-  - `Do góry i w dół` (wznosząco, a potem opadająco)
-  - `Naraz` (harmonicznie)
-  - `Do góry i naraz`
-  - `W dół i naraz`
-  - `Losowy kierunek`
-- **Wirtualny Fortepian:**
-  - Dynamicznie podświetla grane nuty (`1` dla prymy, `2` dla drugiego dźwięku).
-  - Pozwala na klikanie i swobodne odsłuchiwanie pojedynczych dźwięków.
-- **Filtrowanie i Presety:**
-  - Możliwość ćwiczenia dowolnego podzbioru interwałów (np. tylko do kwinty, tylko małe i wielkie, tylko interwały trudne/dysonanse).
-- **Brzmienia i Dźwięk:**
-  - Trzy barwy syntezy: Fortepian akustyczny / E-Piano, Wibrafon / Dzwonki, Ciepły Syntezator analogowy.
-  - Płynna regulacja głośności i tempa odtwarzania.
-- **Pełny zapis w LocalStorage:**
-  - Aplikacja automatycznie zapamiętuje wybrane interwały, tryb, kierunek odtwarzania, głośność, serię poprawnych odpowiedzi (Streaks) oraz historię nauki.
-- **Skróty klawiszowe:**
-  - `Spacja`: Powtórz dźwięk interwału.
-  - `Enter`: Przejdź do kolejnego pytania / Zatwierdź odpowiedź.
+- **Inteligentne powtórki (Active Learning):** Zaawansowany algorytm śledzący Twoje postępy. Po jego włączeniu aplikacja na bieżąco analizuje wskaźnik Twoich błędów. Interwały, które sprawiają Ci najwięcej problemów, będą pojawiać się w testach znacznie częściej. Te, które już opanowałeś, będą odpytywane rzadziej, jedynie w celu utrwalenia wiedzy.
+- **Zmienny dźwięk bazowy (Root Pitch):** Aby upewnić się, że ćwiczysz słuch relatywny, a nie absolutny, aplikacja nigdy nie rozpoczyna interwałów od tej samej nuty. Dźwięk początkowy jest zawsze losowany z szerokiego, komfortowego rejestru (od C3 do E5).
+- **Pełna personalizacja trudności:** Masz pełną kontrolę nad zakresem materiału. Możesz odznaczyć wybrane interwały, aby skupić się na węższym zakresie (np. ćwiczyć wyłącznie interwały do kwinty, tylko interwały czyste lub wyłącznie dysonanse).
+- **Różnorodne warianty odtwarzania:** Aplikacja oferuje kilka barw dźwięku (fortepian, wibrafon, syntezator analogowy) oraz zaawansowane opcje kierunku odtwarzania (m.in. na przemian w górę i w dół, losowy kierunek, czy opcja łącząca tryb melodyczny z harmonicznym). Zmiana tych parametrów zapobiega przyzwyczajaniu się ucha do jednego schematu.
+
+## Przydatne skróty klawiszowe
+
+Aplikacja została zaprojektowana tak, aby umożliwiać płynny trening bez konieczności ciągłego odrywania rąk od klawiatury i używania myszki:
+
+- **Spacja:** Powtórne odtworzenie ostatnio zagranego interwału.
+- **Enter:** Szybkie zatwierdzenie wpisanej odpowiedzi (w Trybie wpisywania) lub natychmiastowe przejście do kolejnego pytania po udzieleniu odpowiedzi.
