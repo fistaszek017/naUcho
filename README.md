@@ -1,51 +1,46 @@
-# NaUcho - Trener Interwałów Muzycznych
+# 🎵 naUcho
 
-NaUcho to kompleksowa, w pełni interaktywna aplikacja internetowa stworzona z myślą o muzykach, uczniach szkół muzycznych oraz hobbystach, którzy chcą doskonalić swój słuch relatywny. Aplikacja pozwala na naukę rozpoznawania interwałów ze słuchu oraz opanowanie ich prawidłowego nazewnictwa w obrębie jednej oktawy (od prymy czystej do oktawy czystej). Działa w całości w Twojej przeglądarce internetowej, nie wymaga instalacji, logowania ani pobierania dodatkowych plików.
+[![Live Demo](https://img.shields.io/badge/Live_Demo-fistaszek017.github.io%2FnaUcho-2ea44f?style=for-the-badge&logo=github)](https://fistaszek017.github.io/naUcho/)
 
-## Jak rozpocząć korzystanie?
+Interaktywna aplikacja webowa do treningu słuchu muzycznego i rozpoznawania interwałów. Powstała z myślą o osobach uczących się muzyki – działa bezpośrednio w przeglądarce, generuje dźwięki w czasie rzeczywistym i dopasowuje poziom trudności do postępów użytkownika.
 
-Wystarczy otworzyć aplikację w dowolnej nowoczesnej przeglądarce internetowej (takiej jak Google Chrome, Mozilla Firefox, Apple Safari czy Microsoft Edge).
+👉 **Przetestuj na żywo:** [fistaszek017.github.io/naUcho](https://fistaszek017.github.io/naUcho/)
 
-Aplikacja jest gotowa do użycia natychmiast po uruchomieniu. Twój postęp, statystyki poprawnych odpowiedzi oraz wszystkie indywidualne preferencje są na bieżąco i automatycznie zapisywane w lokalnej pamięci Twojej przeglądarki. Dzięki temu, po zamknięciu i ponownym otwarciu strony, system przywróci Twoje ustawienia i będziesz mógł kontynuować trening w tym samym miejscu.
+---
 
-## Dostępne tryby nauki
+![Widok główny aplikacji](img/main-view.png)
 
-Aplikacja została podzielona na trzy główne moduły, które odpowiadają różnym etapom przyswajania wiedzy. Pomiędzy trybami możesz przełączać się w dowolnym momencie za pomocą głównego panelu nawigacyjnego.
+|        Klawiatura i tryb nauki         |             Statystyki i postępy              |
+| :------------------------------------: | :-------------------------------------------: |
+| ![Interaktywne pianino](img/piano.png) | ![Statystyki użytkownika](img/statistics.png) |
 
-### 1. Tryb: Nauka (Atlas Interwałów)
+---
 
-Moduł wprowadzający, służący do zapoznania się z teorią, budową oraz brzmieniem poszczególnych interwałów.
+## ✨ Co potrafi aplikacja?
 
-- **Wirtualna klawiatura fortepianowa:** Interaktywny instrument, który wizualizuje odległości między dźwiękami. Klawiatura dynamicznie podświetla odpowiednie klawisze podczas odtwarzania danego interwału, co pomaga powiązać dźwięk z obrazem na klawiaturze.
-- **Opcje odsłuchu:** Każdy interwał możesz odsłuchać na trzy sposoby: melodycznie w górę, melodycznie w dół oraz harmonicznie (dwa dźwięki odtwarzane jednocześnie).
-- **Baza mnemotechnik:** Aplikacja zawiera gotową listę skojarzeń opartych na popularnych utworach muzycznych (np. początkowe dźwięki z filmu "Szczęki" dla sekundy małej czy temat z "Gwiezdnych Wojen" dla kwinty czystej). To najszybsza metoda na zapamiętanie specyfiki brzmieniowej każdego interwału.
+- **Synteza dźwięku na żywo** – wszystkie interwały i dźwięki klawiatury są generowane proceduralnie za pomocą natywnego **Web Audio API** (bez ładowania zewnętrznych plików `.mp3` czy `.wav`).
+- **Adaptacyjna nauka (Active Learning)** – aplikacja śledzi, które interwały sprawiają najwięcej trudności, i częściej podsuwa je podczas kolejnych rund.
+- **Interaktywne pianino** – pozwala wizualizować słyszane interwały oraz swobodnie dogrywać dźwięki na klawiaturze w trakcie ćwiczeń.
+- **Różne tryby gry i podpowiedzi** – ćwiczenie interwałów harmonicznych (współbrzmienie) oraz melodycznych (w górę i w dół), wsparte bazą skojarzeń ze znanymi melodiami.
+- **Zapisywanie postępów** – historia odpowiedzi, serie poprawnych trafień (streaki) i statystyki skuteczności zapisują się automatycznie w `LocalStorage`.
 
-### 2. Tryb: Odgadywanie (Wybór z listy)
+---
 
-Praktyczny test słuchowy oparty na systemie zamkniętym.
+## 🛠️ Technologie i struktura
 
-- Komputer generuje losowy interwał z puli, którą wcześniej zdefiniujesz. Nie masz do dyspozycji podpowiedzi wizualnych.
-- Twoim zadaniem jest zidentyfikowanie usłyszanego interwału i kliknięcie odpowiedniego kafelka z jego nazwą na ekranie.
-- Po każdej odpowiedzi system udziela natychmiastowej informacji zwrotnej, wyświetlając podsumowanie zagranych nut i weryfikując poprawność Twojego wyboru.
+Projekt napisany w czystym **JavaScript (ES6+)**, **HTML5** oraz **CSS3** bez zewnętrznych bibliotek i frameworków:
 
-### 3. Tryb: Odgadywanie (Wpisywanie)
-
-Zaawansowany moduł treningowy, który sprawdza nie tylko słuch, ale i płynność posługiwania się profesjonalną nomenklaturą muzyczną.
-
-- Zamiast wybierać odpowiedź z gotowej listy, musisz samodzielnie wpisać ją na klawiaturze w odpowiednim polu tekstowym.
-- Wbudowany parser jest wysoce elastyczny. Akceptuje pełne nazwy (np. "tercja wielka", "sekunda mala"), standardowe skróty muzyczne (np. "2m", "3w", "tr", "8"), a także zapis w półtonach (np. "4p").
-- System automatycznie ignoruje wielkość liter oraz ewentualny brak polskich znaków diakrytycznych, pozwalając na szybkie i bezbłędne wprowadzanie danych.
-
-## Główne funkcje wspomagające trening
-
-- **Inteligentne powtórki (Active Learning):** Zaawansowany algorytm śledzący Twoje postępy. Po jego włączeniu aplikacja na bieżąco analizuje wskaźnik Twoich błędów. Interwały, które sprawiają Ci najwięcej problemów, będą pojawiać się w testach znacznie częściej. Te, które już opanowałeś, będą odpytywane rzadziej, jedynie w celu utrwalenia wiedzy.
-- **Zmienny dźwięk bazowy (Root Pitch):** Aby upewnić się, że ćwiczysz słuch relatywny, a nie absolutny, aplikacja nigdy nie rozpoczyna interwałów od tej samej nuty. Dźwięk początkowy jest zawsze losowany z szerokiego, komfortowego rejestru (od C3 do E5).
-- **Pełna personalizacja trudności:** Masz pełną kontrolę nad zakresem materiału. Możesz odznaczyć wybrane interwały, aby skupić się na węższym zakresie (np. ćwiczyć wyłącznie interwały do kwinty, tylko interwały czyste lub wyłącznie dysonanse).
-- **Różnorodne warianty odtwarzania:** Aplikacja oferuje kilka barw dźwięku (fortepian, wibrafon, syntezator analogowy) oraz zaawansowane opcje kierunku odtwarzania (m.in. na przemian w górę i w dół, losowy kierunek, czy opcja łącząca tryb melodyczny z harmonicznym). Zmiana tych parametrów zapobiega przyzwyczajaniu się ucha do jednego schematu.
-
-## Przydatne skróty klawiszowe
-
-Aplikacja została zaprojektowana tak, aby umożliwiać płynny trening bez konieczności ciągłego odrywania rąk od klawiatury i używania myszki:
-
-- **Spacja:** Powtórne odtworzenie ostatnio zagranego interwału.
-- **Enter:** Szybkie zatwierdzenie wpisanej odpowiedzi (w Trybie wpisywania) lub natychmiastowe przejście do kolejnego pytania po udzieleniu odpowiedzi.
+```text
+naUcho/
+├── index.html               # Struktura aplikacji
+├── css/
+│   └── style.css            # Style i responsywny
+└── js/
+    ├── app.js               # Logika interfejsu i przepływ gry
+    ├── audio-engine.js      # Generator dźwięku oparty o Web Audio API
+    ├── active-learning.js   # Algorytm doboru interwałów do powtórek
+    ├── intervals-data.js    # Definicje interwałów i skojarzeń melodycznych
+    ├── piano.js             # Obsługa wizualnej klawiatury pianina
+    ├── storage.js           # Zapis i odczyt statystyk w LocalStorage
+    └── bundle.js            # Zbudowany skrypt produkcyjny
+```
